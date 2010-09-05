@@ -1,0 +1,211 @@
+From 136a6126c5eea86124eaadd6c060c73bd5858bdf Mon Sep 17 00:00:00 2001
+From: Zane Ashby <zane.a@demonastery.org>
+Date: Sat, 12 Jun 2010 14:53:52 +1200
+Subject: [PATCH 1/5] Added missing files..
+
+---
+ src/idl/tbb.idl.php                      |    8 ++++++++
+ src/runtime/ext/ext.h                    |    1 +
+ src/runtime/ext/ext_tbb.cpp              |   18 +++++++++++++++++-
+ src/runtime/ext/ext_tbb.h                |   16 ++++++++++++++++
+ src/runtime/ext/profile/extprofile_tbb.h |   16 ++++++++++++++++
+ src/system/ext.inc                       |    1 +
+ src/test/test_ext.h                      |    1 +
+ src/test/test_ext.inc                    |    1 +
+ src/test/test_ext_tbb.cpp                |   15 +++++++++++++++
+ src/test/test_ext_tbb.h                  |   15 +++++++++++++++
+ 10 files changed, 91 insertions(+), 1 deletions(-)
+ create mode 100644 src/idl/tbb.idl.php
+
+diff --git a/src/idl/tbb.idl.php b/src/idl/tbb.idl.php
+new file mode 100644
+index 0000000..93c037c
+--- /dev/null
++++ b/src/idl/tbb.idl.php
+@@ -0,0 +1,8 @@
++<?php
++
++include_once 'base.php';
++
++///////////////////////////////////////////////////////////////////////////////
++
++f('yo', null,
++  array('data' => String));
+diff --git a/src/runtime/ext/ext.h b/src/runtime/ext/ext.h
+index bb1446f..860377e 100644
+--- a/src/runtime/ext/ext.h
++++ b/src/runtime/ext/ext.h
+@@ -67,6 +67,7 @@
+ #include <runtime/ext/profile/extprofile_sqlite3.h>
+ #include <runtime/ext/profile/extprofile_stream.h>
+ #include <runtime/ext/profile/extprofile_string.h>
++#include <runtime/ext/profile/extprofile_tbb.h>
+ #include <runtime/ext/profile/extprofile_thread.h>
+ #include <runtime/ext/profile/extprofile_thrift.h>
+ #include <runtime/ext/profile/extprofile_url.h>
+diff --git a/src/runtime/ext/ext_tbb.cpp b/src/runtime/ext/ext_tbb.cpp
+index 27ddce4..b6bac93 100644
+--- a/src/runtime/ext/ext_tbb.cpp
++++ b/src/runtime/ext/ext_tbb.cpp
+@@ -1,3 +1,19 @@
++/*
++   +----------------------------------------------------------------------+
++   | HipHop for PHP                                                       |
++   +----------------------------------------------------------------------+
++   | Copyright (c) 2010 Facebook, Inc. (http://www.facebook.com)          |
++   | Copyright (c) 1997-2010 The PHP Group                                |
++   +----------------------------------------------------------------------+
++   | This source file is subject to version 3.01 of the PHP license,      |
++   | that is bundled with this package in the file LICENSE, and is        |
++   | available through the world-wide-web at the following url:           |
++   | http://www.php.net/license/3_01.txt                                  |
++   | If you did not receive a copy of the PHP license and are unable to   |
++   | obtain it through the world-wide-web, please send a note to          |
++   | license@php.net so we can mail you a copy immediately.               |
++   +----------------------------------------------------------------------+
++*/
+ 
+ #include <runtime/ext/ext_tbb.h>
+ 
+@@ -5,7 +21,7 @@ namespace HPHP {
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ void f_yo(CStrRef data) {
+-  throw NotImplementedException(__func__);
++	g_context->out().write((const char *)data, data.length());
+ }
+ 
+ 
+diff --git a/src/runtime/ext/ext_tbb.h b/src/runtime/ext/ext_tbb.h
+index ea8f6e1..6196569 100644
+--- a/src/runtime/ext/ext_tbb.h
++++ b/src/runtime/ext/ext_tbb.h
+@@ -1,3 +1,19 @@
++/*
++   +----------------------------------------------------------------------+
++   | HipHop for PHP                                                       |
++   +----------------------------------------------------------------------+
++   | Copyright (c) 2010 Facebook, Inc. (http://www.facebook.com)          |
++   | Copyright (c) 1997-2010 The PHP Group                                |
++   +----------------------------------------------------------------------+
++   | This source file is subject to version 3.01 of the PHP license,      |
++   | that is bundled with this package in the file LICENSE, and is        |
++   | available through the world-wide-web at the following url:           |
++   | http://www.php.net/license/3_01.txt                                  |
++   | If you did not receive a copy of the PHP license and are unable to   |
++   | obtain it through the world-wide-web, please send a note to          |
++   | license@php.net so we can mail you a copy immediately.               |
++   +----------------------------------------------------------------------+
++*/
+ 
+ #ifndef __EXT_TBB_H__
+ #define __EXT_TBB_H__
+diff --git a/src/runtime/ext/profile/extprofile_tbb.h b/src/runtime/ext/profile/extprofile_tbb.h
+index 3c15623..2058503 100644
+--- a/src/runtime/ext/profile/extprofile_tbb.h
++++ b/src/runtime/ext/profile/extprofile_tbb.h
+@@ -1,3 +1,19 @@
++/*
++   +----------------------------------------------------------------------+
++   | HipHop for PHP                                                       |
++   +----------------------------------------------------------------------+
++   | Copyright (c) 2010 Facebook, Inc. (http://www.facebook.com)          |
++   | Copyright (c) 1997-2010 The PHP Group                                |
++   +----------------------------------------------------------------------+
++   | This source file is subject to version 3.01 of the PHP license,      |
++   | that is bundled with this package in the file LICENSE, and is        |
++   | available through the world-wide-web at the following url:           |
++   | http://www.php.net/license/3_01.txt                                  |
++   | If you did not receive a copy of the PHP license and are unable to   |
++   | obtain it through the world-wide-web, please send a note to          |
++   | license@php.net so we can mail you a copy immediately.               |
++   +----------------------------------------------------------------------+
++*/
+ 
+ #ifndef __EXTPROFILE_TBB_H__
+ #define __EXTPROFILE_TBB_H__
+diff --git a/src/system/ext.inc b/src/system/ext.inc
+index 89ac97d..e21efff 100644
+--- a/src/system/ext.inc
++++ b/src/system/ext.inc
+@@ -50,6 +50,7 @@
+ #include "sqlite3.inc"
+ #include "stream.inc"
+ #include "string.inc"
++#include "tbb.inc"
+ #include "thread.inc"
+ #include "thrift.inc"
+ #include "url.inc"
+diff --git a/src/test/test_ext.h b/src/test/test_ext.h
+index 0b38db5..6b7a1ef 100644
+--- a/src/test/test_ext.h
++++ b/src/test/test_ext.h
+@@ -65,6 +65,7 @@
+ #include <test/test_ext_sqlite3.h>
+ #include <test/test_ext_stream.h>
+ #include <test/test_ext_string.h>
++#include <test/test_ext_tbb.h>
+ #include <test/test_ext_thread.h>
+ #include <test/test_ext_thrift.h>
+ #include <test/test_ext_url.h>
+diff --git a/src/test/test_ext.inc b/src/test/test_ext.inc
+index a867e89..9d207ab 100644
+--- a/src/test/test_ext.inc
++++ b/src/test/test_ext.inc
+@@ -50,6 +50,7 @@ RUN_TESTSUITE(TestExtSplfile);
+ RUN_TESTSUITE(TestExtSqlite3);
+ RUN_TESTSUITE(TestExtStream);
+ RUN_TESTSUITE(TestExtString);
++RUN_TESTSUITE(TestExtTbb);
+ RUN_TESTSUITE(TestExtThread);
+ RUN_TESTSUITE(TestExtThrift);
+ RUN_TESTSUITE(TestExtUrl);
+diff --git a/src/test/test_ext_tbb.cpp b/src/test/test_ext_tbb.cpp
+index 17cdcae..6be97f8 100644
+--- a/src/test/test_ext_tbb.cpp
++++ b/src/test/test_ext_tbb.cpp
+@@ -1,3 +1,18 @@
++/*
++   +----------------------------------------------------------------------+
++   | HipHop for PHP                                                       |
++   +----------------------------------------------------------------------+
++   | Copyright (c) 2010 Facebook, Inc. (http://www.facebook.com)          |
++   +----------------------------------------------------------------------+
++   | This source file is subject to version 3.01 of the PHP license,      |
++   | that is bundled with this package in the file LICENSE, and is        |
++   | available through the world-wide-web at the following url:           |
++   | http://www.php.net/license/3_01.txt                                  |
++   | If you did not receive a copy of the PHP license and are unable to   |
++   | obtain it through the world-wide-web, please send a note to          |
++   | license@php.net so we can mail you a copy immediately.               |
++   +----------------------------------------------------------------------+
++*/
+ 
+ #include <test/test_ext_tbb.h>
+ #include <runtime/ext/ext_tbb.h>
+diff --git a/src/test/test_ext_tbb.h b/src/test/test_ext_tbb.h
+index ffaee6a..fd8f48a 100644
+--- a/src/test/test_ext_tbb.h
++++ b/src/test/test_ext_tbb.h
+@@ -1,3 +1,18 @@
++/*
++   +----------------------------------------------------------------------+
++   | HipHop for PHP                                                       |
++   +----------------------------------------------------------------------+
++   | Copyright (c) 2010 Facebook, Inc. (http://www.facebook.com)          |
++   +----------------------------------------------------------------------+
++   | This source file is subject to version 3.01 of the PHP license,      |
++   | that is bundled with this package in the file LICENSE, and is        |
++   | available through the world-wide-web at the following url:           |
++   | http://www.php.net/license/3_01.txt                                  |
++   | If you did not receive a copy of the PHP license and are unable to   |
++   | obtain it through the world-wide-web, please send a note to          |
++   | license@php.net so we can mail you a copy immediately.               |
++   +----------------------------------------------------------------------+
++*/
+ 
+ #ifndef __TEST_EXT_TBB_H__
+ #define __TEST_EXT_TBB_H__
+-- 
+1.7.0.4
+

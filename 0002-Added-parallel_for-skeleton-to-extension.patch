@@ -1,0 +1,117 @@
+From 7b1736a4cf28ed9d47d1c8eb6f853febac0f53d4 Mon Sep 17 00:00:00 2001
+From: Zane Ashby <zane.a@demonastery.org>
+Date: Sat, 12 Jun 2010 15:58:37 +1200
+Subject: [PATCH 2/5] Added parallel_for skeleton to extension
+
+---
+ src/idl/tbb.idl.php                      |    6 ++++++
+ src/runtime/ext/ext_tbb.cpp              |    3 +++
+ src/runtime/ext/ext_tbb.h                |    1 +
+ src/runtime/ext/profile/extprofile_tbb.h |    5 +++++
+ src/system/tbb.inc                       |    1 +
+ src/test/test_ext_tbb.cpp                |    5 +++++
+ src/test/test_ext_tbb.h                  |    1 +
+ 7 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/src/idl/tbb.idl.php b/src/idl/tbb.idl.php
+index 93c037c..4745a3a 100644
+--- a/src/idl/tbb.idl.php
++++ b/src/idl/tbb.idl.php
+@@ -6,3 +6,9 @@ include_once 'base.php';
+ 
+ f('yo', null,
+   array('data' => String));
++
++f('parallel_for', null,
++  array('start' => Int32,
++  	'length' => Int32,
++	'blocksize' => Int32,
++	'func' => Variant));
+diff --git a/src/runtime/ext/ext_tbb.cpp b/src/runtime/ext/ext_tbb.cpp
+index b6bac93..83ec10a 100644
+--- a/src/runtime/ext/ext_tbb.cpp
++++ b/src/runtime/ext/ext_tbb.cpp
+@@ -24,6 +24,9 @@ void f_yo(CStrRef data) {
+ 	g_context->out().write((const char *)data, data.length());
+ }
+ 
++void f_parallel_for(int start, int length, int blocksize, CVarRef func) {
++}
++
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ }
+diff --git a/src/runtime/ext/ext_tbb.h b/src/runtime/ext/ext_tbb.h
+index 6196569..0d9262e 100644
+--- a/src/runtime/ext/ext_tbb.h
++++ b/src/runtime/ext/ext_tbb.h
+@@ -26,6 +26,7 @@ namespace HPHP {
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ void f_yo(CStrRef data);
++void f_parallel_for(int start, int length, int blocksize, CVarRef func);
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ }
+diff --git a/src/runtime/ext/profile/extprofile_tbb.h b/src/runtime/ext/profile/extprofile_tbb.h
+index 2058503..c93ce5d 100644
+--- a/src/runtime/ext/profile/extprofile_tbb.h
++++ b/src/runtime/ext/profile/extprofile_tbb.h
+@@ -30,6 +30,11 @@ inline void x_yo(CStrRef data) {
+   f_yo(data);
+ }
+ 
++inline void x_parallel_for(int start, int length, int blocksize, CVarRef func) {
++  FUNCTION_INJECTION_BUILTIN(parallel_for);
++  f_parallel_for(start, length, blocksize, func);
++}
++
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ }
+diff --git a/src/system/tbb.inc b/src/system/tbb.inc
+index 977dc8d..e97709e 100644
+--- a/src/system/tbb.inc
++++ b/src/system/tbb.inc
+@@ -1,5 +1,6 @@
+ #if EXT_TYPE == 0
+ "yo", T(Void), S(0), "data", T(String), NULL, S(0), NULL, S(0), 
++"parallel_for", T(Void), S(0), "start", T(Int32), NULL, S(0), "length", T(Int32), NULL, S(0), "blocksize", T(Int32), NULL, S(0), "func", T(Variant), NULL, S(0), NULL, S(0), 
+ #elif EXT_TYPE == 1
+ #elif EXT_TYPE == 2
+ #elif EXT_TYPE == 3
+diff --git a/src/test/test_ext_tbb.cpp b/src/test/test_ext_tbb.cpp
+index 6be97f8..895ef91 100644
+--- a/src/test/test_ext_tbb.cpp
++++ b/src/test/test_ext_tbb.cpp
+@@ -24,6 +24,7 @@ bool TestExtTbb::RunTests(const std::string &which) {
+   bool ret = true;
+ 
+   RUN_TEST(test_yo);
++  RUN_TEST(test_parallel_for);
+ 
+   return ret;
+ }
+@@ -33,3 +34,7 @@ bool TestExtTbb::RunTests(const std::string &which) {
+ bool TestExtTbb::test_yo() {
+   return Count(true);
+ }
++
++bool TestExtTbb::test_parallel_for() {
++  return Count(true);
++}
+diff --git a/src/test/test_ext_tbb.h b/src/test/test_ext_tbb.h
+index fd8f48a..e8b387a 100644
+--- a/src/test/test_ext_tbb.h
++++ b/src/test/test_ext_tbb.h
+@@ -28,6 +28,7 @@ class TestExtTbb : public TestCppExt {
+   virtual bool RunTests(const std::string &which);
+ 
+   bool test_yo();
++  bool test_parallel_for();
+ };
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+-- 
+1.7.0.4
+

@@ -1,0 +1,75 @@
+From 4561020c30d422663f467f7984a2c6cb834b0146 Mon Sep 17 00:00:00 2001
+From: Zane Ashby <zane.a@demonastery.org>
+Date: Mon, 12 Jul 2010 22:13:02 +1200
+Subject: [PATCH 4/5] First "seemingly working" parallel_for implementation
+
+---
+ src/runtime/ext/ext_tbb.cpp |   43 ++++++++++++++++++++++++++++---------------
+ 1 files changed, 28 insertions(+), 15 deletions(-)
+
+diff --git a/src/runtime/ext/ext_tbb.cpp b/src/runtime/ext/ext_tbb.cpp
+index 02038fc..cbe6f89 100644
+--- a/src/runtime/ext/ext_tbb.cpp
++++ b/src/runtime/ext/ext_tbb.cpp
+@@ -16,30 +16,43 @@
+ */
+ 
+ #include <runtime/ext/ext_tbb.h>
+-
+-namespace TBB_EXT {
+-	class temp_class {
+-	};
+-}
++#include <tbb/tbb.h>
+ 
+ namespace HPHP {
+ ///////////////////////////////////////////////////////////////////////////////
+ 
++class temp_tbb_class {
++        public:
++                CVarRef callback;
++
++                void operator() (const tbb::blocked_range<int> &range) const {
++                        // Build indices array from blocked_range
++                        Array indices = Array::Create();
++
++                        for (int i = range.begin(); i < range.end(); i++) {
++                                indices.append(i);
++                        }
++
++                        // Build arguments array
++                        Array args = Array::Create();
++                        args.append(indices);
++
++                        // Call user supplied callback with arguments
++                        f_call_user_func_array(this->callback, args);
++                }
++
++                temp_tbb_class(CVarRef func) : callback(func) {
++                        // ctor
++                }
++};
++
+ void f_yo(CStrRef data) {
+ 	g_context->out().write((const char *)data, data.length());
+ }
+ 
+ void f_parallel_for(int start, int length, int blocksize, CVarRef func) {
+-	Array indices = Array::Create();
+-
+-	for (int i = start; i < length; i++) {
+-		indices.append(i);
+-	}
+-
+-	Array args;
+-	args.set(0, indices);
+-
+-	f_call_user_func_array(func, args);
++        // Magic. Probably need to initialize TBB somewhere though
++        tbb::parallel_for(tbb::blocked_range<int>(start, length, blocksize), temp_tbb_class(func));
+ }
+ 
+ 
+-- 
+1.7.0.4
+

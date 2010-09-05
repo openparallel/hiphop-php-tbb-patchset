@@ -1,0 +1,93 @@
+From e20c34167c0ea29c1aef04d86ada671704d32391 Mon Sep 17 00:00:00 2001
+From: Zane Ashby <zane.a@demonastery.org>
+Date: Tue, 13 Jul 2010 12:25:35 +1200
+Subject: [PATCH 5/5] Updated parallel_for API to match tbb.php in Dropbox. Block size is now optional
+
+---
+ src/idl/tbb.idl.php                      |    5 +++--
+ src/runtime/ext/ext_tbb.cpp              |   11 +++++++++--
+ src/runtime/ext/ext_tbb.h                |    2 +-
+ src/runtime/ext/profile/extprofile_tbb.h |    4 ++--
+ src/system/tbb.inc                       |    2 +-
+ 5 files changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/src/idl/tbb.idl.php b/src/idl/tbb.idl.php
+index 4745a3a..f08d60e 100644
+--- a/src/idl/tbb.idl.php
++++ b/src/idl/tbb.idl.php
+@@ -10,5 +10,6 @@ f('yo', null,
+ f('parallel_for', null,
+   array('start' => Int32,
+   	'length' => Int32,
+-	'blocksize' => Int32,
+-	'func' => Variant));
++        'func' => Variant,
++        'blocksize' => array(Int32, '-1'), // Optional
++));
+diff --git a/src/runtime/ext/ext_tbb.cpp b/src/runtime/ext/ext_tbb.cpp
+index cbe6f89..d18c7e5 100644
+--- a/src/runtime/ext/ext_tbb.cpp
++++ b/src/runtime/ext/ext_tbb.cpp
+@@ -50,9 +50,16 @@ void f_yo(CStrRef data) {
+ 	g_context->out().write((const char *)data, data.length());
+ }
+ 
+-void f_parallel_for(int start, int length, int blocksize, CVarRef func) {
++void f_parallel_for(int start, int length, CVarRef func, int blocksize /* = -1 */) {
+         // Magic. Probably need to initialize TBB somewhere though
+-        tbb::parallel_for(tbb::blocked_range<int>(start, length, blocksize), temp_tbb_class(func));
++
++        if (blocksize == -1) {
++                // Use auto_partitioner for block size
++                tbb::parallel_for(tbb::blocked_range<int>(start, length), temp_tbb_class(func), tbb::auto_partitioner());
++        } else {
++                // Use manually set block size
++                tbb::parallel_for(tbb::blocked_range<int>(start, length, blocksize), temp_tbb_class(func));
++        }
+ }
+ 
+ 
+diff --git a/src/runtime/ext/ext_tbb.h b/src/runtime/ext/ext_tbb.h
+index 0d9262e..61fe9aa 100644
+--- a/src/runtime/ext/ext_tbb.h
++++ b/src/runtime/ext/ext_tbb.h
+@@ -26,7 +26,7 @@ namespace HPHP {
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ void f_yo(CStrRef data);
+-void f_parallel_for(int start, int length, int blocksize, CVarRef func);
++void f_parallel_for(int start, int length, CVarRef func, int blocksize = -1);
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ }
+diff --git a/src/runtime/ext/profile/extprofile_tbb.h b/src/runtime/ext/profile/extprofile_tbb.h
+index c93ce5d..5084a2a 100644
+--- a/src/runtime/ext/profile/extprofile_tbb.h
++++ b/src/runtime/ext/profile/extprofile_tbb.h
+@@ -30,9 +30,9 @@ inline void x_yo(CStrRef data) {
+   f_yo(data);
+ }
+ 
+-inline void x_parallel_for(int start, int length, int blocksize, CVarRef func) {
++inline void x_parallel_for(int start, int length, CVarRef func, int blocksize = -1) {
+   FUNCTION_INJECTION_BUILTIN(parallel_for);
+-  f_parallel_for(start, length, blocksize, func);
++  f_parallel_for(start, length, func, blocksize);
+ }
+ 
+ 
+diff --git a/src/system/tbb.inc b/src/system/tbb.inc
+index e97709e..acd5098 100644
+--- a/src/system/tbb.inc
++++ b/src/system/tbb.inc
+@@ -1,6 +1,6 @@
+ #if EXT_TYPE == 0
+ "yo", T(Void), S(0), "data", T(String), NULL, S(0), NULL, S(0), 
+-"parallel_for", T(Void), S(0), "start", T(Int32), NULL, S(0), "length", T(Int32), NULL, S(0), "blocksize", T(Int32), NULL, S(0), "func", T(Variant), NULL, S(0), NULL, S(0), 
++"parallel_for", T(Void), S(0), "start", T(Int32), NULL, S(0), "length", T(Int32), NULL, S(0), "func", T(Variant), NULL, S(0), "blocksize", T(Int32), "-1", S(0), NULL, S(0), 
+ #elif EXT_TYPE == 1
+ #elif EXT_TYPE == 2
+ #elif EXT_TYPE == 3
+-- 
+1.7.0.4
+
